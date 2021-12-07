@@ -53,6 +53,7 @@ Zynthian.BasePlayGrid {
         id: _private
         property QtObject model
         property QtObject miniGridModel
+        property int channel: 15
         property int chordRows
         property var chordScales: ["ionian","dorian","phrygian","aeolian","chromatic"]
         property var miniChordScales: ["dorian","phrygian"]
@@ -98,7 +99,7 @@ Zynthian.BasePlayGrid {
                         subnote_col += row_scale[subnote_scale_index];
                     }
 
-                    var subnote = component.getNote(subnote_col);
+                    var subnote = component.getNote(subnote_col, _private.channel);
                     subnotes.push(subnote);
 
                 }
@@ -121,6 +122,11 @@ Zynthian.BasePlayGrid {
     }
 
     function populateGrid(){
+        if (zynthian.fixed_layers.active_midi_channel > -1) {
+            _private.channel = zynthian.fixed_layers.active_midi_channel;
+        } else {
+            _private.channel = 15;
+        }
         var chord_rows = component.getProperty("chordRows");
         fillModel(_private.model, chord_rows, component.getProperty("chordScales"))
         fillModel(_private.miniGridModel, 2, component.getProperty("miniChordScales"))
@@ -162,6 +168,11 @@ Zynthian.BasePlayGrid {
         if (gridContentsChanged) {
             populateGridTimer.restart()
         }
+    }
+
+    Connections {
+        target: zynthian.fixed_layers
+        onList_updated: populateGridTimer.restart();
     }
 
     Timer {
